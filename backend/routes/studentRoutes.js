@@ -1,77 +1,88 @@
-const express = require('express');
-const router = express.Router();
-const Student = require('../models/Student');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import React, { useState } from "react";
 
-// Middleware for JWT authentication
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "No token provided" });
+function Register() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    course: "",
+  });
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.studentId = decoded.id;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: "Invalid token" });
-  }
-};
-
-// Register route
-router.post('/register', async (req, res) => {
-  try {
-    const { name, email, password, course } = req.body;
-
-    if (!name || !email || !password || !course)
-      return res.status(400).json({ message: 'All fields are required' });
-
-    const existing = await Student.findOne({ email });
-    if (existing) return res.status(400).json({ message: 'Email already exists' });
-
-    const newStudent = new Student({ name, email, password, course });
-    await newStudent.save();
-
-    res.status(201).json({ message: 'Registration successful' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// Login route
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const student = await Student.findOne({ email });
-    if (!student) return res.status(400).json({ message: 'Invalid credentials' });
-
-    const isMatch = await bcrypt.compare(password, student.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-
-    const token = jwt.sign({ id: student._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-    // Send token and student info
-    res.json({ 
-      message: 'Login successful', 
-      token,
-      student: { name: student.name, email: student.email, course: student.course }
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
     });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+  };
 
-// Get logged-in student info
-router.get('/me', authMiddleware, async (req, res) => {
-  try {
-    const student = await Student.findById(req.studentId);
-    if (!student) return res.status(404).json({ message: 'Student not found' });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    res.json({ student });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+    try {
+      const response = await fetch("https://students-app-1-jmc1.onrender.com/api/students/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-module.exports = router;
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("✅ Registration successful!");
+        setFormData({ name: "", email: "", password: "", course: "" });
+      } else {
+        alert(`❌ Registration failed: ${data.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("⚠️ Server not reachable. Please try again later.");
+    }
+  };
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>Student Registration</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          name="name"
+          placeholder="Enter name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+        <br />
+        <input
+          type="email"
+          name="email"
+          placeholder="Enter email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+        <br />
+        <input
+          type="password"
+          name="password"
+          placeholder="Enter password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+        />
+        <br />
+        <input
+          type="text"
+          name="course"
+          placeholder="Enter course"
+          value={formData.course}
+          onChange={handleChange}
+          required
+        />
+        <br />
+        <button type="submit">Register</button>
+      </form>
+    </div>
+  );
+}
+
+export default Register;
