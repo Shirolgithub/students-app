@@ -15,15 +15,13 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// ✅ Configure CORS properly
-const allowedOrigins = [
-  'http://localhost:3000', // local React frontend
-  'https://students-app-frontend.onrender.com' // your Render frontend URL
-];
-
+// CORS configuration
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: [
+      "http://localhost:3000",
+      /\.onrender\.com$/,   // allow ANY Render frontend domain
+    ],
     credentials: true,
   })
 );
