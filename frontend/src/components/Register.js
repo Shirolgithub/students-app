@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // ✅ all imports should be at the top
+import axios from 'axios';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -17,9 +17,10 @@ const Register = () => {
 
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/students/register`,
+        "https://students-app-1-jmc1.onrender.com/api/students/register",
         formData
       );
+
       console.log('✅ Registration successful:', res.data);
       alert('Registration successful!');
     } catch (error) {
