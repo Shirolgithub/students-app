@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Student = require("../models/Student"); // ← adjust if model name/path is different
-const bcrypt = require("bcryptjs");
+const Student = require("../models/Student");
 const jwt = require("jsonwebtoken");
 
 // Register student
@@ -15,19 +14,17 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create student
+    // Create student (password hashing happens automatically in model)
     const student = await Student.create({
       name,
       email,
-      password: hashedPassword,
+      password,
       course,
     });
 
     res.status(201).json({ message: "Student registered", student });
   } catch (error) {
+    console.error("REGISTER ERROR:", error);   // <-- add log
     res.status(500).json({ message: "Server error", error });
   }
 });
